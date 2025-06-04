@@ -110,7 +110,7 @@ const App = () => {
           )}
 
           <section className="all-movies">
-            <h2>Movies</h2>
+            <h2>{isLoading || searchTerm ? "Top Results" : "Movies"}</h2>
 
             {isLoading ? (
               <div className="text-center">
@@ -118,6 +118,8 @@ const App = () => {
               </div>
             ) : errorMessage ? (
               <p className="text-red-500">{errorMessage}</p>
+            ) : movies.length === 0 ? (
+              <p className="text-gray-500 text-center">No movies found.</p>
             ) : (
               <ul>
                 {movies.map((movie) => (

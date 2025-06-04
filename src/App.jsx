@@ -66,6 +66,7 @@ const App = () => {
     try {
       const movies = await getTrendingMovies();
       setTrendingMovies(movies);
+      console.log("Trending Movies:", movies);
     } catch (error) {
       console.error("Error fetching trending movies:", error);
     }
@@ -76,8 +77,10 @@ const App = () => {
   }, [debouncedSearchTerm]);
 
   useEffect(() => {
-    fetchTrendingMovies();
-  }, []);
+    if (searchTerm === "") {
+      fetchTrendingMovies();
+    }
+  }, [searchTerm]);
 
   return (
     <main>
@@ -92,7 +95,7 @@ const App = () => {
 
           <Search searchTerm={searchTerm} setSearchTerm={setSearchTerm} />
 
-          {trendingMovies.length > 0 && (
+          {trendingMovies.length > 0 && searchTerm == "" && (
             <section className="trending">
               <h2>Trending Movies</h2>
               <ul>

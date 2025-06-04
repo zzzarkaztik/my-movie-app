@@ -30,32 +30,40 @@ export const updateSearchCount = async (searchTerm, movie) => {
 
 export const getTrendingMovies = async () => {
   try {
-    const result = await database.listDocuments(appwriteConfig.databaseId, appwriteConfig.collectionId, [Query.limit(5)]);
+    const result = await database.listDocuments(appwriteConfig.databaseId, appwriteConfig.collectionId, [
+      Query.limit(10000),
+      Query.orderDesc("count"),
+    ]);
 
     const movieAggregates = new Map();
 
     result.documents.forEach((doc) => {
-      if (!movieAggregates.has(doc.movie_id)) {
-        movieAggregates.set(doc.movie_id, {
-          movie_id: doc.movie_id,
-          count: 0,
+      const movieId = doc.movie_id;
+
+      if (!movieAggregates.has(movieId)) {
+        movieAggregates.set(movieId, {
+          movie_id: movieId,
+          totalCount: 0,
           poster_url: doc.poster_url,
-          searchTerm: doc.searchTerm,
+          latestSearchTerm: doc.searchTerm,
+          highestSingleCount: doc.count,
         });
       }
 
-      const aggregate = movieAggregates.get(doc.movie_id);
-      aggregate.count += doc.count;
+      const aggregate = movieAggregates.get(movieId);
+      aggregate.totalCount += doc.count;
 
-      if (doc.count > aggregate.maxCount) {
-        aggregate.searchTerm = doc.searchTerm;
-        aggregate.maxCount = doc.count;
+      if (doc.count > aggregate.highestSingleCount) {
+        aggregate.latestSearchTerm = doc.searchTerm;
+        aggregate.highestSingleCount = doc.count;
       }
     });
 
-    return Array.from(movieAggregates.values())
-      .sort((a, b) => b.count - a.count)
+    const trendingMovies = Array.from(movieAggregates.values())
+      .sort((a, b) => b.totalCount - a.totalCount)
       .slice(0, 5);
+
+    return trendingMovies;
   } catch (error) {
     console.error("Error fetching trending movies:", error);
     return [];

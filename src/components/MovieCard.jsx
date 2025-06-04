@@ -5,7 +5,10 @@ import { faStar } from "@fortawesome/free-solid-svg-icons";
 const MovieCard = ({ movie: { title, vote_average, release_date, poster_path, original_language } }) => {
   return (
     <div className="movie-card">
-      <img src={poster_path ? `https://image.tmdb.org/t/p/w500/${poster_path}` : `/no-movie.png`} alt="${title} poster" />
+      <img
+        src={poster_path ? `https://image.tmdb.org/t/p/w500/${poster_path}` : `${import.meta.env.BASE_URL}no-movie-portrait.png`}
+        alt={`${title} poster`}
+      />
 
       <div className="mt-4">
         <h3>{title}</h3>

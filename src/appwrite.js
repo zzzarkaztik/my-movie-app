@@ -1,25 +1,22 @@
 import { Client, Databases, ID, Query } from "appwrite";
+import { appwriteConfig } from "./config";
 
-const PROJECT_ID = import.meta.env.VITE_APPWRITE_PROJECT_ID;
-const DATABASE_ID = import.meta.env.VITE_APPWRITE_DATABASE_ID;
-const COLLECTION_ID = import.meta.env.VITE_APPWRITE_COLLECTION_ID;
-
-const client = new Client().setEndpoint(import.meta.env.VITE_APPWRITE_ENDPOINT).setProject(PROJECT_ID);
+const client = new Client().setEndpoint(appwriteConfig.endpoint).setProject(appwriteConfig.projectId);
 
 const database = new Databases(client);
 
 export const updateSearchCount = async (searchTerm, movie) => {
   try {
-    const result = await database.listDocuments(DATABASE_ID, COLLECTION_ID, [Query.equal("searchTerm", searchTerm)]);
+    const result = await database.listDocuments(appwriteConfig.databaseId, appwriteConfig.collectionId, [
+      Query.equal("searchTerm", searchTerm),
+    ]);
 
     if (result.documents.length > 0) {
       const doc = result.documents[0];
-      await database.updateDocument(DATABASE_ID, COLLECTION_ID, doc.$id, {
-        count: doc.count + 1,
-      });
+      await database.updateDocument(appwriteConfig.databaseId, appwriteConfig.collectionId, doc.$id, { count: doc.count + 1 });
     } else {
-      await database.createDocument(DATABASE_ID, COLLECTION_ID, ID.unique(), {
-        searchTerm: searchTerm,
+      await database.createDocument(appwriteConfig.databaseId, appwriteConfig.collectionId, ID.unique(), {
+        searchTerm,
         count: 1,
         movie_id: movie.id,
         poster_url: `https://image.tmdb.org/t/p/w500/${movie.poster_path}`,
@@ -27,12 +24,13 @@ export const updateSearchCount = async (searchTerm, movie) => {
     }
   } catch (error) {
     console.error("Error updating search count:", error);
+    throw error;
   }
 };
 
 export const getTrendingMovies = async () => {
   try {
-    const result = await database.listDocuments(DATABASE_ID, COLLECTION_ID, [Query.limit(5)]);
+    const result = await database.listDocuments(appwriteConfig.databaseId, appwriteConfig.collectionId, [Query.limit(5)]);
 
     const movieAggregates = new Map();
 
@@ -55,11 +53,9 @@ export const getTrendingMovies = async () => {
       }
     });
 
-    const trendingMovies = Array.from(movieAggregates.values())
+    return Array.from(movieAggregates.values())
       .sort((a, b) => b.count - a.count)
       .slice(0, 5);
-    console.log("Trending Movies:", trendingMovies);
-    return trendingMovies;
   } catch (error) {
     console.error("Error fetching trending movies:", error);
     return [];
